@@ -1,24 +1,35 @@
 // Produce deprecation warnings (needs to come before arrayobject.h inclusion).
-//#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
-//#include <boost/python.hpp>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <boost/python.hpp>
 //#include <Python.h>
 //#include <boost/python/module.hpp>
 //#include <boost/python/def.hpp>
-//#include <numpy/arrayobject.h>
+#include <numpy/arrayobject.h>
 //using namespace boost::python;
-//namespace bp = boost::python;
+namespace bp = boost::python;
+//using namespace boost::python;
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <cassert>
+#define MAX_DOUBLE 999999999
 class Img {
  public:
-    Img(): width_(0), height_(0), channel_(0), dim_(0), data_() {}
-    Img(int w, int h, int c): width_(w), height_(h), channel_(c), dim_(w*h) {
+    Img(): width_(0), height_(0), channel_(0), dim_(0), data_(NULL), embed_(false) {}
+    Img(int w, int h, int c): width_(w), height_(h), channel_(c), dim_(w*h), embed_(false) {
+        assert(w*h*c);
         data_ = new double[channel_ * dim_];
     }
+    /*
+    Notes:
+    1. The copy constructor is only used for object construction. After construction, the assignment operation use the automatically generated operator rather than the copy constructor. The automatically generated assignment operator directly copys the data_ pointer, which leads to double freement when deconstruction.
+    2. the data_ pointer is randomly initialized instead of initialied to NULL, if it is not explicitly listed in the initialization list.
+    3. PyArray_SimpleNewFramData creates and return a "copy" rather than a "reference" of the data pointed by the pointer passed into the function. 
+    4. PyArray_DATA returns a refenrece of the data embeded in PyArrayObject. That is, if we can modify the numpy array in python by directly modifying the data pointed by the returned pointer in C++.
+    5. Notice double free of the data pointer in deconstruction function.
+    */
     Img(const Img& source): width_(source.width()), height_(source.height()),
-    channel_(source.channel()), dim_(source.dim()), data_() {
+    channel_(source.channel()), dim_(source.dim()), data_(), embed_(false) {
         const double* source_data = source.data();
         data_ = new double[channel_ * dim_];
         for (int c = 0; c < channel_; c++) {
@@ -30,9 +41,19 @@ class Img {
         }
     }
     ~Img() {
-	if (data_)
+	if (data_ && !embed_) {
+        printf("%p\n", data_);
 	    free(data_);
+        }
+        data_ = NULL;
     }
+    void FromPyArrayObject(PyArrayObject *);
+    void CopyFromPyArrayObject(PyArrayObject *);
+    PyArrayObject* ToPyArrayObject();
+
+    Img& operator=(const Img& );
+    void ReshapeLike(const Img&);
+    void Reshape(const int, const int, const int);
 
     int width() const {
         return width_;
@@ -49,16 +70,22 @@ class Img {
     const double* data() const{
 	return data_;
     }
+    double* mutable_data() {
+        return data_;
+    } 
 
-// protected
+ protected:
     int width_;
     int height_;
     int channel_;
     int dim_;
     double* data_;
+    bool embed_; // indicating wheter the data_ pointer is pointed to a numpy data blob. If it is, the data_ pointer cannot be freed, otherwise, the numpy array will be freed either.
     //double* data_;
 };
 
+void Filt(const Img&, const Img&,  const int, Img&);
+void FiltMax(const Img&, const int,  const int, const int, Img&);
 
 
 //object filter(object x) {
