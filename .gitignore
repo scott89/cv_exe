@@ -3,3 +3,5 @@
 *.o
 *.so
 ignore
+*.pyc
+.ipynb_checkpoints

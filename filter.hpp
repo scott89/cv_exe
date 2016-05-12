@@ -42,7 +42,7 @@ class Img {
     }
     ~Img() {
 	if (data_ && !embed_) {
-        printf("%p\n", data_);
+        //printf("%p\n", data_);
 	    free(data_);
         }
         data_ = NULL;
@@ -84,36 +84,9 @@ class Img {
     //double* data_;
 };
 
-void Filt(const Img&, const Img&,  const int, Img&);
-void FiltMax(const Img&, const int,  const int, const int, Img&);
+void FiltImg(const Img&, const Img&,  const int, Img&);
+void FiltMaxImg(const Img&, const int,  const int, const int, Img&);
 
+bp::object Filt(bp::object, bp::object, bp::object);
+bp::object FiltMax(bp::object, bp::object, bp::object, bp::object);
 
-//object filter(object x) {
-//    PyArrayObject* pt = reinterpret_cast<PyArrayObject*>(x.ptr());
-//    double* dt = static_cast<double*>(PyArray_DATA(pt));
-//    int nd = PyArray_NDIM(pt);
-//    npy_intp* dims = PyArray_DIMS(pt);
-//    int n_el = 1;
-//    for (int i = 0; i < nd; i++) {
-//        n_el *= dims[i];
-//    }
-//    printf("%d\n", n_el);
-//    double* tdt = new double[n_el];
-//    //double* tdt = new double(9);
-//    std::memcpy(tdt, dt, n_el * sizeof(double));
-//    tdt[0] = 0;
-//    
-//    printf("%d\n", n_el * sizeof(double));
-//    //tdt[0] = 0;
-//    PyArrayObject* o = (PyArrayObject *) PyArray_SimpleNewFromData(nd, dims, NPY_DOUBLE, tdt);
-//    handle<> hdl((PyObject*)o);
-//    numeric::array arr(hdl);
-//    return arr.copy();
-//}
-//
-//BOOST_PYTHON_MODULE(test)
-//{
-//    numeric::array::set_module_and_type("numpy", "ndarray"); 
-//    def("filter", filter);
-//    import_array1();
-//}

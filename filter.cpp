@@ -57,8 +57,8 @@ void Img::FromPyArrayObject(PyArrayObject * in) {
     int nd = PyArray_NDIM(in);
     npy_intp* dims = PyArray_DIMS(in);
     assert(nd >=1 && nd <= 3);
-    width_ = dims[0]; 
-    height_ = nd >=2? dims[1]: 1;
+    height_ = dims[0]; 
+    width_ = nd >=2? dims[1]: 1;
     channel_ = nd ==3? dims[2]:1;
     dim_ = width_ * height_;
 }
@@ -67,8 +67,8 @@ void Img::CopyFromPyArrayObject(PyArrayObject * in ) {
     int nd = PyArray_NDIM(in);
     npy_intp* dims = PyArray_DIMS(in);
     assert(nd >=1 && nd <= 3);
-    width_ = dims[0]; 
-    height_ = nd >=2? dims[1]: 1;
+    height_ = dims[0]; 
+    width_ = nd >=2? dims[1]: 1;
     channel_ = nd ==3? dims[2]:1;
     dim_ = width_ * height_;
     double* in_data = static_cast<double*>(PyArray_DATA(in));
@@ -90,17 +90,12 @@ PyArrayObject* Img::ToPyArrayObject() {
     assert(dim_ * channel_ > 0);
     int nd = 3;
     npy_intp dims [3];
-    dims[0] = (npy_intp) width_; dims[1] = (npy_intp) height_; dims[2] = (npy_intp) channel_;  
+    dims[0] = (npy_intp) height_; dims[1] = (npy_intp) width_; dims[2] = (npy_intp) channel_;  
     PyArrayObject* out = (PyArrayObject *) PyArray_SimpleNewFromData(nd, dims, NPY_DOUBLE, data_);
     return out;
 }
 
-
-
-
-
-
-void Filt(const Img& in, const Img& filter, const int channel, Img& out) {
+void FiltImg(const Img& in, const Img& filter, const int channel, Img& out) {
     const int width = in.width();
     const int height = in.height();
     const int num_channel = in.channel();
@@ -111,7 +106,6 @@ void Filt(const Img& in, const Img& filter, const int channel, Img& out) {
     double* out_data = out.mutable_data();
     const int k_width = filter.width();
     const int k_height = filter.height();
-
     for(int h = 0; h < height; h++) {
 	for (int w = 0; w < width; w++) {
 	    int w_start = w - ((k_width + 1) / 2);
@@ -127,16 +121,19 @@ void Filt(const Img& in, const Img& filter, const int channel, Img& out) {
 		    int h_temp = h_start + i;
 		    if (w_temp >=0 && w_temp < width && h_temp >= 0 && h_temp < height) {
 			sum += in_data[h_temp * width + w_temp] * filter_data[i * k_width + j];
+                       //printf("%f x %f, ", in_data[h_temp * width + w_temp],  filter_data[i * k_width + j]);
+                        //printf("%d %d, \n", h_temp, w_temp);
 		    }
 		}
 	    }
+            printf("\n");
 	    out_data[h * width + w] = sum;
 	}
     }
 
 }
 
-void FiltMax(const Img& in,  const int k_width, const int k_height, const int channel, Img& out) {
+void FiltMaxImg(const Img& in,  const int k_width, const int k_height, const int channel, Img& out) {
     const int width = in.width();
     const int height = in.height();
     const int num_channel = in.channel();
@@ -169,9 +166,22 @@ void FiltMax(const Img& in,  const int k_width, const int k_height, const int ch
 
 }
 
+bp::object Filt(bp::object in_obj, bp::object kernel_obj, bp::object channel_obj) {
+    Img in, kernel, out;
+    in.FromPyArrayObject(reinterpret_cast<PyArrayObject*>(in_obj.ptr()));
+    kernel.FromPyArrayObject(reinterpret_cast<PyArrayObject*>(kernel_obj.ptr()));
+    int channel = bp::extract<int>(channel_obj);
+    FiltImg(in, kernel, channel, out);
+    PyObject* out_obj =(PyObject*) out.ToPyArrayObject(); 
+    bp::handle<> out_handle(out_obj);
+    bp::numeric::array out_array(out_handle);
+    return out_array.copy();
+
+}
+
 BOOST_PYTHON_MODULE(filter)
 {
     bp::numeric::array::set_module_and_type("numpy", "ndarray"); 
-   // def("filter", filter);
+    def("Filt", Filt);
     import_array1();
 }
