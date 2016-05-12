@@ -108,8 +108,8 @@ void FiltImg(const Img& in, const Img& filter, const int channel, Img& out) {
     const int k_height = filter.height();
     for(int h = 0; h < height; h++) {
 	for (int w = 0; w < width; w++) {
-	    int w_start = w - ((k_width + 1) / 2);
-	    int h_start = h - ((k_height + 1) / 2);
+	    int w_start = w - ((k_width) / 2);
+	    int h_start = h - ((k_height) / 2);
 	    int kw_start = 0;
 	    int kh_start = 0;
 	    int kw_end = k_width;
@@ -126,7 +126,6 @@ void FiltImg(const Img& in, const Img& filter, const int channel, Img& out) {
 		    }
 		}
 	    }
-            printf("\n");
 	    out_data[h * width + w] = sum;
 	}
     }
@@ -144,8 +143,8 @@ void FiltMaxImg(const Img& in,  const int k_width, const int k_height, const int
 
     for(int h = 0; h < height; h++) {
 	for (int w = 0; w < width; w++) {
-	    int w_start = w - ((k_width + 1) / 2);
-	    int h_start = h - ((k_height + 1) / 2);
+	    int w_start = w - ((k_width) / 2);
+	    int h_start = h - ((k_height) / 2);
 	    int kw_start = 0;
 	    int kh_start = 0;
 	    int kw_end = k_width;
@@ -176,6 +175,19 @@ bp::object Filt(bp::object in_obj, bp::object kernel_obj, bp::object channel_obj
     bp::handle<> out_handle(out_obj);
     bp::numeric::array out_array(out_handle);
     return out_array.copy();
+}
+
+bp::object FiltMax(bp::object in_obj, bp::object k_size, bp::object channel_obj) {
+    Img in,  out;
+    in.CopyFromPyArrayObject(reinterpret_cast<PyArrayObject*>(in_obj.ptr()));
+    int k_height = bp::extract<int>(k_size[0]);
+    int k_width = bp::extract<int>(k_size[1]);
+    int channel = bp::extract<int>(channel_obj);
+    FiltMaxImg(in, k_width, k_height, channel, out);
+    PyObject* out_obj =(PyObject*) out.ToPyArrayObject(); 
+    bp::handle<> out_handle(out_obj);
+    bp::numeric::array out_array(out_handle);
+    return out_array.copy();
 
 }
 
@@ -183,5 +195,6 @@ BOOST_PYTHON_MODULE(filter)
 {
     bp::numeric::array::set_module_and_type("numpy", "ndarray"); 
     def("Filt", Filt);
+    def("FiltMax", FiltMax);
     import_array1();
 }

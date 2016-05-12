@@ -88,5 +88,5 @@ void FiltImg(const Img&, const Img&,  const int, Img&);
 void FiltMaxImg(const Img&, const int,  const int, const int, Img&);
 
 bp::object Filt(bp::object, bp::object, bp::object);
-bp::object FiltMax(bp::object, bp::object, bp::object, bp::object);
+bp::object FiltMax(bp::object, bp::object, bp::object);
 
