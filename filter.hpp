@@ -8,10 +8,14 @@
 //using namespace boost::python;
 namespace bp = boost::python;
 //using namespace boost::python;
-#include <memory>
-#include <stdio.h>
+#include <memory> // header files for shared_ptr
+#include <stdio.h> 
 #include <stdlib.h>
-#include <cassert>
+#include <cassert> // header files for assert
+#include <vector> // header files for vector
+#include <algorithm> // header files for sort
+#include <math.h>
+#include <bitset>
 #define MAX_DOUBLE 999999999
 class Img {
  public:
@@ -86,7 +90,10 @@ class Img {
 
 void FiltImg(const Img&, const Img&,  const int, Img&);
 void FiltMaxImg(const Img&, const int,  const int, const int, Img&);
+void FiltMedImg(const Img&, const int, const int, const int, Img&);
+unsigned char* GetMap();
+void ExtractLBP(const Img&, Img&);
 
 bp::object Filt(bp::object, bp::object, bp::object);
 bp::object FiltMax(bp::object, bp::object, bp::object);
-
+bp::object FiltMed(bp::object, bp::object, bp::object);
