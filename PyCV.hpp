@@ -19,7 +19,7 @@ namespace bp = boost::python;
 #define MAX_DOUBLE 999999999
 class Img {
  public:
-    Img(): width_(0), height_(0), channel_(0), dim_(0), data_(NULL), embed_(false) {}
+    Img(): width_(0), height_(0), channel_(0), dim_(0), data_(NULL), embed_(false) { }
     Img(int w, int h, int c): width_(w), height_(h), channel_(c), dim_(w*h), embed_(false) {
         assert(w*h*c);
         data_ = new double[channel_ * dim_];

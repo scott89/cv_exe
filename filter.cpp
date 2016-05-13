@@ -1,99 +1,4 @@
-#include "filter.hpp"
-
-Img& Img::operator=(const Img &source){
-    width_ = source.width();
-    height_ = source.height();
-    channel_ = source.channel();
-    dim_ = source.dim();
-    const double* source_data = source.data();
-    if(data_ && !embed_) {
-	free(data_);
-    }
-    data_ = new double[channel_ * dim_];
-    embed_ = false;
-    for (int c = 0; c < channel_; c++) {
-	for (int h = 0; h < height_; h++) {
-	    for (int w = 0; w < width_; w++) {
-		data_[c * dim_ + h * width_ + w] = source_data[c * dim_ + h * width_ + w];
-	    }
-	}
-    }
-    return *this;
-}
-void Img::ReshapeLike(const Img & source) {
-    if(width_!= source.width() || height_ != source.height() || channel_ != source.channel()) {
-	width_ = source.width();
-	height_ = source.height();
-	channel_ = source.channel();
-	dim_ = source.dim();
-	if (data_ && !embed_) {
-	    free(data_);
-	}
-	data_ = new double[dim_ * channel_];
-	embed_ = false;
-    }
-}
-
-void Img:: Reshape(const int w, const int h, const int c) {
-    if(width_!= w || height_ != h || channel_ != c) {
-	width_ = w;
-	height_ = h;
-	channel_ = c;
-	dim_ = w * h;
-	if (data_ && !embed_) {
-	    free(data_);
-	}
-	data_ = new double[dim_ * channel_];
-	embed_ = false;
-    }
-}
-
-void Img::FromPyArrayObject(PyArrayObject * in) { 
-    if(data_ && !embed_) {
-	free(data_);
-    }
-    data_ = static_cast<double*>(PyArray_DATA(in));
-    embed_ = true;
-    int nd = PyArray_NDIM(in);
-    npy_intp* dims = PyArray_DIMS(in);
-    assert(nd >=1 && nd <= 3);
-    height_ = dims[0]; 
-    width_ = nd >=2? dims[1]: 1;
-    channel_ = nd ==3? dims[2]:1;
-    dim_ = width_ * height_;
-}
-
-void Img::CopyFromPyArrayObject(PyArrayObject * in ) {
-    int nd = PyArray_NDIM(in);
-    npy_intp* dims = PyArray_DIMS(in);
-    assert(nd >=1 && nd <= 3);
-    height_ = dims[0]; 
-    width_ = nd >=2? dims[1]: 1;
-    channel_ = nd ==3? dims[2]:1;
-    dim_ = width_ * height_;
-    double* in_data = static_cast<double*>(PyArray_DATA(in));
-    if(data_ && !embed_) {
-	free(data_);
-    }
-    data_ = new double[dim_ * channel_];
-    embed_ = false;
-    for(int c = 0; c < channel_; c++) {
-	for(int h = 0; h < height_; h++) {
-	    for(int w = 0; w < width_; w++) {
-		data_[c * dim_ + h * width_ + w] = in_data[c * dim_ + h * width_ + w];
-	    }
-	}
-    }
-}
-
-PyArrayObject* Img::ToPyArrayObject() {
-    assert(dim_ * channel_ > 0);
-    int nd = 3;
-    npy_intp dims [3];
-    dims[0] = (npy_intp) height_; dims[1] = (npy_intp) width_; dims[2] = (npy_intp) channel_;  
-    PyArrayObject* out = (PyArrayObject *) PyArray_SimpleNewFromData(nd, dims, NPY_DOUBLE, data_);
-    return out;
-}
+#include "PyCV.hpp"
 
 void FiltImg(const Img& in, const Img& filter, const int channel, Img& out) {
     const int width = in.width();
@@ -244,12 +149,12 @@ unsigned char* GetMap() {
     unsigned char* table = new unsigned char[(int)pow(2, samples)];
     for (unsigned char value = 0; value < pow(2, samples)-1; value++) {
         unsigned char value_left = ((value & 1) << samples-1) | (value >> 1);
-        int num_trans = bitset<samples>(value_left ^ value).count();
+        int num_trans = std::bitset<samples>(value_left ^ value).count();
        // cout << "value: " << (bitset<8>)value << " " << sum << endl;
         if (num_trans > 2) {
             table[(int) value] = (unsigned char) (samples + 1);
         } else {
-            table[(int) value] = (unsigned char) (bitset<samples>(value).count());
+            table[(int) value] = (unsigned char) (std::bitset<samples>(value).count());
         }
         //cout << "value: " << (int)value << " " << (int) table[(int) value] << endl;
 
@@ -257,12 +162,3 @@ unsigned char* GetMap() {
     return table;
 }
 
-
-BOOST_PYTHON_MODULE(filter)
-{
-    bp::numeric::array::set_module_and_type("numpy", "ndarray"); 
-    def("Filt", Filt);
-    def("FiltMax", FiltMax);
-    def("FiltMed", FiltMed);
-    import_array1();
-}
