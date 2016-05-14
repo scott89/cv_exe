@@ -144,21 +144,4 @@ bp::object FiltMed(bp::object in_obj, bp::object k_size, bp::object channel_obj)
 }
 
 
-unsigned char* GetMap() {
-    const int samples = 8;
-    unsigned char* table = new unsigned char[(int)pow(2, samples)];
-    for (unsigned char value = 0; value < pow(2, samples)-1; value++) {
-        unsigned char value_left = ((value & 1) << samples-1) | (value >> 1);
-        int num_trans = std::bitset<samples>(value_left ^ value).count();
-       // cout << "value: " << (bitset<8>)value << " " << sum << endl;
-        if (num_trans > 2) {
-            table[(int) value] = (unsigned char) (samples + 1);
-        } else {
-            table[(int) value] = (unsigned char) (std::bitset<samples>(value).count());
-        }
-        //cout << "value: " << (int)value << " " << (int) table[(int) value] << endl;
-
-    }
-    return table;
-}
 

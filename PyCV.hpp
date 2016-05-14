@@ -17,6 +17,7 @@ namespace bp = boost::python;
 #include <math.h>
 #include <bitset>
 #define MAX_DOUBLE 999999999
+#define PI 3.14159265
 class Img {
  public:
     Img(): width_(0), height_(0), channel_(0), dim_(0), data_(NULL), embed_(false) { }
@@ -91,9 +92,12 @@ class Img {
 void FiltImg(const Img&, const Img&,  const int, Img&);
 void FiltMaxImg(const Img&, const int,  const int, const int, Img&);
 void FiltMedImg(const Img&, const int, const int, const int, Img&);
-unsigned char* GetMap();
-void ExtractLBP(const Img&, Img&);
+double* GetMap(const int = 8);
+void ExtractImgLBP(const Img&, Img&, const double*, const int = 0, const int = 8, const int = 1);
+
 
 bp::object Filt(bp::object, bp::object, bp::object);
 bp::object FiltMax(bp::object, bp::object, bp::object);
 bp::object FiltMed(bp::object, bp::object, bp::object);
+bp::object ExtractLBP(bp::object, bp::object, bp::object);
+

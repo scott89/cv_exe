@@ -5,5 +5,6 @@ BOOST_PYTHON_MODULE(PyCV)
     def("Filt", Filt);
     def("FiltMax", FiltMax);
     def("FiltMed", FiltMed);
+    def("ExtractLBP", ExtractLBP);
     import_array1();
 }
