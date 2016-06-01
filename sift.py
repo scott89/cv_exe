@@ -35,7 +35,7 @@ def extract_sift(im):
     patch_ori = patch_ori.astype(np.int)
 
 
-    # In[22]:
+    # 
 
     hist = np.zeros([patch_ori.shape[2], 128], dtype=np.double);
     for h in range(0, 16):
